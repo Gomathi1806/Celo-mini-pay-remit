@@ -13,8 +13,12 @@
         "@celo/rainbowkit-celo": "1.1.1",
         "@headlessui/react": "^1.7.14",
         "@heroicons/react": "^2.0.18",
+        "@nextui-org/react": "^2.2.10",
         "@rainbow-me/rainbowkit": "^1.0.2",
         "@wagmi/connectors": "^3.1.10",
+        "flowbite": "^2.3.0",
+        "flowbite-react": "^0.7.3",
+        "framer-motion": "^11.0.14",
         "next": "^13.4.2",
         "react": "18.2.0",
         "react-dom": "18.2.0",
@@ -25,90 +29,14 @@
         "@types/node": "^20.2.1",
         "@types/react": "^18.2.6",
         "@types/react-dom": "^18.2.4",
-        "autoprefixer": "^10.4.14",
+        "autoprefixer": "^10.4.18",
         "eslint": "^8.40.0",
         "eslint-config-next": "^13.4.2",
-        "postcss": "^8.4.31",
-        "tailwindcss": "^3.3.2",
+        "postcss": "^8.4.35",
+        "tailwindcss": "^3.4.1",
         "typescript": "^5.0.4"
     },
     "browser": {
         "net": false
     }
 }
-[
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"name": "exchangeRates",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "currencyKey",
-				"type": "bytes32"
-			}
-		],
-		"name": "getExchangeRate",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "currencyKey",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "rate",
-				"type": "uint256"
-			}
-		],
-		"name": "setExchangeRate",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-]

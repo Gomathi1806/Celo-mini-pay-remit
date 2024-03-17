@@ -1,143 +1,133 @@
 import PrimaryButton from "@/components/Button";
-import { useWeb3 } from "@/contexts/useWeb3";
+import { publicClient, useWeb3 } from "@/contexts/useWeb3";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import StableTokenABI from "../contexts/cusd-abi.json";
+import remittanceABI from "../abis/remittance.json";
+import { celoAlfajores } from "viem/chains";
+import { createWalletClient, custom, formatEther, parseEther } from 'viem'
+import { Dropdown } from "flowbite";
 
-export default function Home() {
+
+
+export default function Home(props: any) {
     const {
         address,
         getUserAddress,
-        sendCUSD,
-        mintMinipayNFT,
-        getNFTs,
-        signTransaction,
+        sendUsdc,
     } = useWeb3();
-    const [cUSDLoading, setCUSDLoading] = useState(false);
-    const [nftLoading, setNFTLoading] = useState(false);
-    const [signingLoading, setSigningLoading] = useState(false);
-    const [userOwnedNFTs, setUserOwnedNFTs] = useState<string[]>([]);
-    const [tx, setTx] = useState<any>(undefined);
+
+    const [balance, setBalance] = useState<bigint | null>(null);
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
+
+    //capture the userinputted amount of usd and recipint address
+    const [usdAmount, setUsdAmount] = useState<number>(0);
+    const [recipientAddress, setRecipientAddress] = useState<string>('');
+
 
     useEffect(() => {
         getUserAddress().then(async () => {
-            const tokenURIs = await getNFTs();
-            setUserOwnedNFTs(tokenURIs);
+
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
-    async function sendingCUSD() {
         if (address) {
-            setSigningLoading(true);
-            try {
-                const tx = await sendCUSD(address, "0.1");
-                setTx(tx);
-            } catch (error) {
-                console.log(error);
-            } finally {
-                setSigningLoading(false);
-            }
+            publicClient.getBalance({ address }).then(b => setBalance(b));
         }
+
+    }, [address]);
+
+
+
+    const handleSendRemittance = async (to: string, amount: number) => {
+        let walletClient = createWalletClient({
+            transport: custom(window.ethereum),
+            chain: celoAlfajores,
+        });
+
+        let [address] = await walletClient.getAddresses();
+
+        const amountInWei = parseEther(`${amount}`);
+
+        // const tx = await walletClient.writeContract({
+        //     address: 0xcd277ce9a5679eef25a1e622b64b75515c73ab85 as any, // USDC testnet
+        //     abi: remittanceABI,
+        //     functionName: "swap",
+        //     account: address,
+        //     args: [to, amountInWei],
+        // });
+
+        const tx = await walletClient.writeContract({
+            address: 0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B,
+            abi: StableTokenABI.abi,
+            functionName: "transfer",
+            account: address,
+            args: [ amountInWei,to],
+        });
+    
+
+        let receipt = await publicClient.waitForTransactionReceipt({
+            hash: tx,
+        });
+
+        return receipt;
     }
 
-    async function signMessage() {
-        setCUSDLoading(true);
-        try {
-            await signTransaction();
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setCUSDLoading(false);
-        }
-    }
 
-    async function mintNFT() {
-        setNFTLoading(true);
-        try {
-            const tx = await mintMinipayNFT();
-            const tokenURIs = await getNFTs();
-            setUserOwnedNFTs(tokenURIs);
-            setTx(tx);
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setNFTLoading(false);
-        }
-    }
+    
+
+
+  
+
+
 
     return (
-        <div className="flex flex-col justify-center items-center">
-            <div className="h1">
-                There you go... a canvas for your next Minipay project!
+
+
+        <div className="p-4 flex flex-col items-center h-screen rounded-lg ">
+            <h2 className="text-xl font-bold mb-4">Hey ! Welcome to Remlo</h2>
+
+            <div className=" bg-emerald-200 px-6 py-8 pb-2 pt-2.5 rounded-lg p-4 text-center">
+                <h2 className="text-2xl">  {balance ? Number(formatEther(balance)).toFixed(2) : ""} </h2>
+                <p>   USDC</p>
+
             </div>
-            {address && (
-                <>
-                    <div className="h2 text-center">
-                        Your address:{" "}
-                        <span className="font-bold text-sm">{address}</span>
-                    </div>
-                    {tx && (
-                        <p className="font-bold mt-4">
-                            Tx Completed: {(tx.hash as string).substring(0, 6)}
-                            ...
-                            {(tx.hash as string).substring(
-                                tx.hash.length - 6,
-                                tx.hash.length
-                            )}
-                        </p>
-                    )}
-                    <div className="w-full px-3 mt-7">
-                        <PrimaryButton
-                            loading={signingLoading}
-                            onClick={sendingCUSD}
-                            title="Send 0.1 cUSD to your own address"
-                            widthFull
-                        />
-                    </div>
 
-                    <div className="w-full px-3 mt-6">
-                        <PrimaryButton
-                            loading={cUSDLoading}
-                            onClick={signMessage}
-                            title="Sign a Message"
-                            widthFull
-                        />
-                    </div>
+            <div className="flex flex-col justify-center items-center mb-2 rounded-lg p-7 ">
+                <p className="my-5">
+                    I want to send
+                </p>
+                <input type="number" value={usdAmount} onChange={(e) => setUsdAmount(parseFloat(e.target.value))} className="border border-gray-300 rounded-md p-2 w-full" />
+            </div>
+            {/* <div className="block mb-2 rounded-lg p-7 ">
+                <div className="mb-10">
+                    Choose currency:
+                </div>
 
-                    {userOwnedNFTs.length > 0 ? (
-                        <div className="flex flex-col items-center justify-center w-full mt-7">
-                            <p className="font-bold">My NFTs</p>
-                            <div className="w-full grid grid-cols-2 gap-3 mt-3 px-2">
-                                {userOwnedNFTs.map((tokenURI, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-2 border-[3px] border-colors-secondary rounded-xl"
-                                    >
-                                        <Image
-                                            alt="MINIPAY NFT"
-                                            src={tokenURI}
-                                            className="w-[160px] h-[200px] object-cover"
-                                            width={160}
-                                            height={200}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="mt-5">You do not have any NFTs yet</div>
-                    )}
+<div className="flex ">
+<button type="button" class="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Teal</button>
 
-                    <div className="w-full px-3 mt-5">
-                        <PrimaryButton
-                            loading={nftLoading}
-                            onClick={mintNFT}
-                            title="Mint Minipay NFT"
-                            widthFull
-                        />
-                    </div>
-                </>
-            )}
+<button type="button" class="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Teal</button>
+</div>
+
+
+            </div> */}
+            <label className="block mb-2 rounded-lg mt-10">
+                Enter Email Address:
+                <input type="text" value={recipientAddress} onChange={(e) => setRecipientAddress(e.target.value)} className="border border-gray-300 rounded-md p-2 w-full" />
+            </label>
+
+            <div className="p-8">
+                <button onClick={() => handleSendRemittance(recipientAddress, usdAmount)} className="bg-emerald-200 px-6 pb-2 pt-2.5 rounded-lg text-xs font-medium uppercase leading-normal text-black shadow">Send Remittance</button>
+
+            </div>
+
+            <div>
+                <p className="text-center">Every token payment you make inside MiniPay will be swapped to CUSD</p>
+            </div>
+
+
         </div>
+
     );
 }
